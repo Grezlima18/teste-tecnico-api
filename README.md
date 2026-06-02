@@ -7,6 +7,91 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Exam Request API
+
+This project exposes `POST /api/exams` to receive exam requests and store them in SQLite.
+
+Authentication uses the `X-Exam-Hash` header as an API token. The client must send the SHA-256 hash generated from the private key:
+
+```bash
+hash=$(php -r 'echo hash("sha256", getenv("EXAM_API_PRIVATE_KEY"));')
+```
+
+Configure the private key in `.env`:
+
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+EXAM_API_PRIVATE_KEY=change-this-private-key
+EXAM_API_HASH_HEADER=X-Exam-Hash
+EXAM_API_RANDOM_FAILURE_PERCENT=30
+```
+
+`EXAM_API_RANDOM_FAILURE_PERCENT` controls candidate-test instability. Use `0` to disable random failures or `100` to force every valid request to fail with `503`.
+
+Accepted exam codes and fake results:
+
+- `TESTO`: `Testosterona total: 560 ng/dL`
+- `HEMO`: `Hemograma completo: sem alteracoes relevantes`
+- `T4L`: `T4 livre: 1.20 ng/dL`
+
+Run the API locally:
+
+```bash
+touch database/database.sqlite
+php artisan migrate
+php artisan serve
+```
+
+Example `payload.json`:
+
+```json
+{
+    "external_service_id": 1001,
+    "requested_at": "2026-05-29T10:30:00-03:00",
+    "patient": {
+      "name": "Jane Doe",
+      "document": "12345678900",
+      "sex": "f",
+      "birth_date": "1990-03-10"
+    },
+    "exams": [
+      {
+        "code": "TESTO"
+      },
+      {
+        "code": "HEMO"
+      }
+    ],
+    "requester": {
+      "name": "Dr. House"
+    }
+}
+```
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/exams \
+  -H "Content-Type: application/json" \
+  -H "X-Exam-Hash: $hash" \
+  --data-binary @payload.json
+```
+
+The response includes one `protocol` for the whole service request. Use the protocol to get all fake results:
+
+```bash
+curl http://127.0.0.1:8000/api/exams/PROTO-20260601-123456 \
+  -H "X-Exam-Hash: $hash"
+```
+
+Use the protocol plus an exam code to get only one exam result:
+
+```bash
+curl http://127.0.0.1:8000/api/exams/PROTO-20260601-123456/HEMO \
+  -H "X-Exam-Hash: $hash"
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
