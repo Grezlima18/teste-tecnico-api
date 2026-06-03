@@ -177,7 +177,7 @@ class ExamRequestApiTest extends TestCase
         return $this->call('POST', '/api/exams', [], [], [], [
             'CONTENT_TYPE' => 'application/json',
             'HTTP_ACCEPT' => 'application/json',
-            'HTTP_X_EXAM_HASH' => $hash,
+            'HTTP_AUTHORIZATION' => "Bearer {$hash}",
         ], $body);
     }
 
@@ -187,7 +187,7 @@ class ExamRequestApiTest extends TestCase
 
         return $this->withHeaders([
             'Accept' => 'application/json',
-            'X-Exam-Hash' => $hash,
+            'Authorization' => "Bearer {$hash}",
         ])->getJson($uri);
     }
 }

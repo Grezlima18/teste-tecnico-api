@@ -78,11 +78,25 @@ Para exames externos:
 
 O uso de agentes de IA para auxiliar na construção do projeto fica a critério do candidato.
 
+## Requisitos para executar esta API
+
+Para executar esta API localmente, é necessário ter:
+
+- PHP 8.4 ou superior;
+- Composer;
+- extensão `pdo_sqlite` habilitada no PHP.
+
+Também é possível executar a API com Docker utilizando Laravel Sail.
+
+No Windows, o uso do WSL é recomendado. Caso não utilize WSL, crie o arquivo do banco SQLite pelo Git Bash ou pelo comando `sqlite3`, pois o comando `touch` pode não estar disponível no terminal padrão do Windows.
+
 ## Como executar esta API
 
 O arquivo `.env` já está incluído no repositório com as configurações padrão. Não é necessário criar ou editar esse arquivo para executar a API.
 
-Instale as dependências, crie o banco SQLite, execute as migrations e suba o servidor local:
+### Execução local
+
+Instale as dependências, crie o banco SQLite, execute as migrations e suba o servidor:
 
 ```bash
 composer install
@@ -97,6 +111,34 @@ Por padrão, a API ficará disponível em:
 http://127.0.0.1:8000
 ```
 
+No Windows sem WSL, crie o banco SQLite usando uma das opções abaixo:
+
+```bash
+# Git Bash
+touch database/database.sqlite
+```
+
+```bash
+# sqlite3
+sqlite3 database/database.sqlite ".databases"
+```
+
+### Execução com Docker e Laravel Sail
+
+Depois de instalar as dependências, também é possível executar a API com Sail:
+
+```bash
+touch database/database.sqlite
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate
+```
+
+Com Sail, a API ficará disponível na porta configurada em `APP_PORT` no `.env`:
+
+```text
+http://127.0.0.1:8006
+```
+
 ## Configuração da API
 
 As principais configurações já estão definidas no `.env` versionado neste repositório:
@@ -105,23 +147,22 @@ As principais configurações já estão definidas no `.env` versionado neste re
 DB_CONNECTION=sqlite
 DB_DATABASE=database/database.sqlite
 EXAM_API_PRIVATE_KEY=c19a0ae13f3de4a65ed2f0bdb840ed28
-EXAM_API_HASH_HEADER=X-Exam-Hash
-EXAM_API_RANDOM_FAILURE_PERCENT=80
+EXAM_API_RANDOM_FAILURE_PERCENT=50
 ```
 
 `EXAM_API_RANDOM_FAILURE_PERCENT` controla a instabilidade proposital da API.
 
 - `0`: desativa falhas aleatórias;
-- `80`: aproximadamente 80% das requisições válidas falham;
+- `50`: aproximadamente 50% das requisições válidas falham;
 - `100`: todas as requisições válidas falham.
 
 Quando a API falhar propositalmente, ela retornará HTTP `503`. O projeto do candidato deve tratar esse cenário.
 
 ## Autenticação
 
-Todas as rotas da API exigem autenticação pelo header `X-Exam-Hash`.
+Todas as rotas da API exigem autenticação pelo header `Authorization` usando Bearer Token.
 
-O valor do header deve ser o hash SHA-256 gerado a partir da chave privada configurada em `EXAM_API_PRIVATE_KEY`.
+O token deve ser o hash SHA-256 gerado a partir da chave privada configurada em `EXAM_API_PRIVATE_KEY`.
 
 Exemplo em PHP:
 
@@ -130,10 +171,10 @@ $privateKey = 'c19a0ae13f3de4a65ed2f0bdb840ed28';
 $hash = hash('sha256', $privateKey);
 ```
 
-Com a chave padrão deste repositório, o valor do header será:
+Com a chave padrão deste repositório, o header será:
 
 ```text
-X-Exam-Hash: 14e22da9c6a9c6cca82e12052f5b7cc88e72148c5faeabde9856b09e27bf3efc
+Authorization: Bearer 14e22da9c6a9c6cca82e12052f5b7cc88e72148c5faeabde9856b09e27bf3efc
 ```
 
 Exemplo usando Laravel HTTP Client no projeto do candidato:
@@ -145,7 +186,7 @@ $privateKey = config('services.exam_api.private_key');
 $hash = hash('sha256', $privateKey);
 
 $response = Http::withHeaders([
-    'X-Exam-Hash' => $hash,
+    'Authorization' => "Bearer {$hash}",
 ])->post('http://127.0.0.1:8000/api/exams', $payload);
 ```
 
@@ -209,7 +250,7 @@ hash=$(php -r 'echo hash("sha256", "c19a0ae13f3de4a65ed2f0bdb840ed28");')
 
 curl -X POST http://127.0.0.1:8000/api/exams \
   -H "Content-Type: application/json" \
-  -H "X-Exam-Hash: $hash" \
+  -H "Authorization: Bearer $hash" \
   -d '{
     "external_service_id": 1001,
     "requested_at": "2026-06-03T10:30:00-03:00",
@@ -269,7 +310,7 @@ Exemplo:
 
 ```bash
 curl http://127.0.0.1:8000/api/exams/PROTO-20260603-123456 \
-  -H "X-Exam-Hash: $hash"
+  -H "Authorization: Bearer $hash"
 ```
 
 Exemplo de resposta:
@@ -306,7 +347,7 @@ Exemplo:
 
 ```bash
 curl http://127.0.0.1:8000/api/exams/PROTO-20260603-123456/HEMO \
-  -H "X-Exam-Hash: $hash"
+  -H "Authorization: Bearer $hash"
 ```
 
 Exemplo de resposta:
@@ -335,13 +376,9 @@ Os resultados retornados pela API são fixos:
 - `HEMO`: `Hemograma completo: sem alteracoes relevantes`;
 - `T4L`: `T4 livre: 1.20 ng/dL`.
 
-## O que será observado na avaliação
+## O que será avaliado
 
 Serão observados principalmente:
 
-- organização do código;
-- modelagem do fluxo de atendimento;
+- organização e conhecimento do candidato sobre o código;
 - integração com API externa;
-- tratamento de falhas da API;
-- persistência correta dos protocolos e resultados;
-- clareza da interface para acompanhar o status dos exames.

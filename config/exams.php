@@ -2,7 +2,6 @@
 
 return [
     'private_key' => env('EXAM_API_PRIVATE_KEY'),
-    'hash_header' => env('EXAM_API_HASH_HEADER', 'X-Exam-Hash'),
     'random_failure_percent' => (int) env('EXAM_API_RANDOM_FAILURE_PERCENT', 0),
     'fake_results' => [
         'TESTO' => 'Testosterona total: 560 ng/dL',
