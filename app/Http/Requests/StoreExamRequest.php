@@ -43,7 +43,6 @@ class StoreExamRequest extends FormRequest
             'external_service_id' => ['required', 'integer', 'min:1'],
             'requested_at' => ['required', 'date'],
             'patient.name' => ['required', 'string', 'max:255'],
-            'patient.document' => ['required', 'string', 'max:50'],
             'patient.sex' => ['required', 'string', 'max:50', Rule::in(['m', 'f'])],
             'patient.birth_date' => ['required', 'date'],
             'exams' => ['required', 'array', 'min:1'],

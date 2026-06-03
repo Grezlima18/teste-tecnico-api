@@ -53,7 +53,6 @@ class ExamRequestApiTest extends TestCase
         $this->assertDatabaseHas('exam_requests', [
             'external_service_id' => 1001,
             'protocol' => $protocol,
-            'patient_document' => '12345678900',
             'exam_code' => 'TESTO',
             'status' => 'completed',
             'result' => 'Testosterona total: 560 ng/dL',
@@ -62,7 +61,6 @@ class ExamRequestApiTest extends TestCase
         $this->assertDatabaseHas('exam_requests', [
             'external_service_id' => 1001,
             'protocol' => $protocol,
-            'patient_document' => '12345678900',
             'exam_code' => 'HEMO',
             'status' => 'completed',
             'result' => 'Hemograma completo: sem alteracoes relevantes',
@@ -151,7 +149,6 @@ class ExamRequestApiTest extends TestCase
             'requested_at' => '2026-05-29T10:30:00-03:00',
             'patient' => [
                 'name' => 'Jane Doe',
-                'document' => '12345678900',
                 'sex' => 'f',
                 'birth_date' => '1990-03-10',
             ],

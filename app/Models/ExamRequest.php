@@ -11,7 +11,6 @@ class ExamRequest extends Model
         'protocol',
         'requested_at',
         'patient_name',
-        'patient_document',
         'patient_birth_date',
         'exam_code',
         'result',

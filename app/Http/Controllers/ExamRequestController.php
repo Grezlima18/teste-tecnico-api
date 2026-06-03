@@ -30,7 +30,6 @@ class ExamRequestController extends Controller
                         'protocol' => $protocol,
                         'requested_at' => $payload['requested_at'],
                         'patient_name' => $payload['patient']['name'],
-                        'patient_document' => $payload['patient']['document'],
                         'patient_birth_date' => $payload['patient']['birth_date'] ?? null,
                         'exam_code' => $examCode,
                         'result' => config("exams.fake_results.{$examCode}"),

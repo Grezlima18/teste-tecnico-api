@@ -1,143 +1,347 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Teste técnico - Integração com Laboratório de Apoio
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Olá, candidato(a).
 
-## Exam Request API
+Esta API faz parte do teste técnico. O objetivo é avaliar sua capacidade de criar uma aplicação web, modelar um fluxo simples de atendimento e integrar com um serviço externo que possui regras próprias e instabilidade proposital.
 
-This project exposes `POST /api/exams` to receive exam requests and store them in SQLite.
+## Sobre este repositório
 
-Authentication uses the `X-Exam-Hash` header as an API token. The client must send the SHA-256 hash generated from the private key:
+Esta API simula um Laboratório de Apoio. Em sistemas de saúde, laboratórios de apoio recebem exames que serão processados fora da empresa principal e disponibilizam os resultados por meio de web services.
+
+Neste teste, a API:
+
+- recebe solicitações de exames externos;
+- aceita somente alguns códigos de exames;
+- retorna resultados fictícios;
+- pode falhar aleatoriamente para simular instabilidade de integração.
+
+## Requisitos do projeto do candidato
+
+Crie um projeto utilizando:
+
+- Vue.js 3 ou superior;
+- Laravel 9 ou superior;
+- MySQL 5.6 ou superior.
+
+As bibliotecas de frontend ficam a seu critério.
+
+No seu projeto, implemente as funcionalidades abaixo.
+
+## Cadastro de pacientes
+
+Crie um cadastro de pacientes com os seguintes campos obrigatórios:
+
+- nome;
+- sexo;
+- data de nascimento.
+
+## Cadastro de exames
+
+Crie um cadastro de exames com os seguintes campos obrigatórios:
+
+- nome;
+- código usado para identificar o exame;
+- flag para indicar se o exame será processado internamente ou externamente.
+
+A API deste repositório aceita somente estes códigos de exames externos:
+
+- `HEMO`;
+- `TESTO`;
+- `T4L`.
+
+## Tela de atendimento
+
+Crie uma tela de atendimento onde o usuário consiga:
+
+- selecionar ou buscar o paciente pelo ID ou pelo nome;
+- adicionar uma lista de exames a serem realizados;
+- visualizar o status de cada exame.
+
+Os status esperados são:
+
+- `Pendente`;
+- `Enviado ao Apoio`;
+- `Exame Pronto`.
+
+Para exames internos, você pode deixar o status como `Pendente` ou `Exame Pronto`.
+
+Para exames externos:
+
+- envie os exames para esta API;
+- salve o protocolo retornado pela API;
+- consulte o resultado usando o protocolo;
+- salve o resultado retornado;
+- altere o status do exame para `Exame Pronto`;
+- exiba o resultado do exame de forma simples na tela.
+
+É obrigatório, para avaliação, ter pelo menos um atendimento externo integrado com esta API.
+
+O uso de agentes de IA para auxiliar na construção do projeto fica a critério do candidato.
+
+## Como executar esta API
+
+O arquivo `.env` já está incluído no repositório com as configurações padrão. Não é necessário criar ou editar esse arquivo para executar a API.
+
+Instale as dependências, crie o banco SQLite, execute as migrations e suba o servidor local:
 
 ```bash
-hash=$(php -r 'echo hash("sha256", getenv("EXAM_API_PRIVATE_KEY"));')
-```
-
-Configure the private key in `.env`:
-
-```dotenv
-DB_CONNECTION=sqlite
-DB_DATABASE=database/database.sqlite
-EXAM_API_PRIVATE_KEY=change-this-private-key
-EXAM_API_HASH_HEADER=X-Exam-Hash
-EXAM_API_RANDOM_FAILURE_PERCENT=30
-```
-
-`EXAM_API_RANDOM_FAILURE_PERCENT` controls candidate-test instability. Use `0` to disable random failures or `100` to force every valid request to fail with `503`.
-
-Accepted exam codes and fake results:
-
-- `TESTO`: `Testosterona total: 560 ng/dL`
-- `HEMO`: `Hemograma completo: sem alteracoes relevantes`
-- `T4L`: `T4 livre: 1.20 ng/dL`
-
-Run the API locally:
-
-```bash
+composer install
 touch database/database.sqlite
 php artisan migrate
 php artisan serve
 ```
 
-Example `payload.json`:
+Por padrão, a API ficará disponível em:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Configuração da API
+
+As principais configurações já estão definidas no `.env` versionado neste repositório:
+
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+EXAM_API_PRIVATE_KEY=c19a0ae13f3de4a65ed2f0bdb840ed28
+EXAM_API_HASH_HEADER=X-Exam-Hash
+EXAM_API_RANDOM_FAILURE_PERCENT=80
+```
+
+`EXAM_API_RANDOM_FAILURE_PERCENT` controla a instabilidade proposital da API.
+
+- `0`: desativa falhas aleatórias;
+- `80`: aproximadamente 80% das requisições válidas falham;
+- `100`: todas as requisições válidas falham.
+
+Quando a API falhar propositalmente, ela retornará HTTP `503`. O projeto do candidato deve tratar esse cenário.
+
+## Autenticação
+
+Todas as rotas da API exigem autenticação pelo header `X-Exam-Hash`.
+
+O valor do header deve ser o hash SHA-256 gerado a partir da chave privada configurada em `EXAM_API_PRIVATE_KEY`.
+
+Exemplo em PHP:
+
+```php
+$privateKey = 'c19a0ae13f3de4a65ed2f0bdb840ed28';
+$hash = hash('sha256', $privateKey);
+```
+
+Com a chave padrão deste repositório, o valor do header será:
+
+```text
+X-Exam-Hash: 14e22da9c6a9c6cca82e12052f5b7cc88e72148c5faeabde9856b09e27bf3efc
+```
+
+Exemplo usando Laravel HTTP Client no projeto do candidato:
+
+```php
+use Illuminate\Support\Facades\Http;
+
+$privateKey = config('services.exam_api.private_key');
+$hash = hash('sha256', $privateKey);
+
+$response = Http::withHeaders([
+    'X-Exam-Hash' => $hash,
+])->post('http://127.0.0.1:8000/api/exams', $payload);
+```
+
+Uma sugestão de configuração no projeto do candidato:
+
+```dotenv
+EXAM_API_URL=http://127.0.0.1:8000
+EXAM_API_PRIVATE_KEY=c19a0ae13f3de4a65ed2f0bdb840ed28
+```
+
+## Rotas da API
+
+### Enviar exames externos
+
+```http
+POST /api/exams
+```
+
+Esta rota recebe um atendimento externo. O mesmo paciente pode enviar um ou mais exames na mesma requisição.
+
+Exemplo de payload:
 
 ```json
 {
+  "external_service_id": 1001,
+  "requested_at": "2026-06-03T10:30:00-03:00",
+  "patient": {
+    "name": "Jane Doe",
+    "sex": "f",
+    "birth_date": "1990-03-10"
+  },
+  "exams": [
+    {
+      "code": "TESTO"
+    },
+    {
+      "code": "HEMO"
+    }
+  ],
+  "requester": {
+    "name": "Dr. House"
+  }
+}
+```
+
+Campos importantes:
+
+- `external_service_id`: ID numérico do atendimento no sistema do candidato;
+- `requested_at`: data e hora da solicitação;
+- `patient.name`: nome do paciente;
+- `patient.sex`: `m` ou `f`;
+- `patient.birth_date`: data de nascimento do paciente;
+- `exams`: lista de exames externos;
+- `exams.*.code`: código do exame. Valores aceitos: `HEMO`, `TESTO`, `T4L`;
+- `requester.name`: nome do solicitante.
+
+Exemplo com `curl`:
+
+```bash
+hash=$(php -r 'echo hash("sha256", "c19a0ae13f3de4a65ed2f0bdb840ed28");')
+
+curl -X POST http://127.0.0.1:8000/api/exams \
+  -H "Content-Type: application/json" \
+  -H "X-Exam-Hash: $hash" \
+  -d '{
     "external_service_id": 1001,
-    "requested_at": "2026-05-29T10:30:00-03:00",
+    "requested_at": "2026-06-03T10:30:00-03:00",
     "patient": {
       "name": "Jane Doe",
-      "document": "12345678900",
       "sex": "f",
       "birth_date": "1990-03-10"
     },
     "exams": [
-      {
-        "code": "TESTO"
-      },
-      {
-        "code": "HEMO"
-      }
+      { "code": "TESTO" },
+      { "code": "HEMO" }
     ],
     "requester": {
       "name": "Dr. House"
     }
+  }'
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "message": "Exam request received.",
+  "data": {
+    "external_service_id": 1001,
+    "protocol": "PROTO-20260603-123456",
+    "status": "completed",
+    "exams": [
+      {
+        "id": 1,
+        "exam_code": "TESTO",
+        "status": "completed",
+        "created_at": "2026-06-03T13:30:00.000000Z"
+      },
+      {
+        "id": 2,
+        "exam_code": "HEMO",
+        "status": "completed",
+        "created_at": "2026-06-03T13:30:00.000000Z"
+      }
+    ]
+  }
 }
 ```
 
-Example request:
+O campo `protocol` identifica a solicitação enviada ao laboratório de apoio. Todos os exames enviados na mesma requisição compartilham o mesmo protocolo.
 
-```bash
-curl -X POST http://127.0.0.1:8000/api/exams \
-  -H "Content-Type: application/json" \
-  -H "X-Exam-Hash: $hash" \
-  --data-binary @payload.json
+### Consultar todos os resultados por protocolo
+
+```http
+GET /api/exams/{protocol}
 ```
 
-The response includes one `protocol` for the whole service request. Use the protocol to get all fake results:
+Use esta rota para consultar todos os resultados vinculados ao protocolo.
+
+Exemplo:
 
 ```bash
-curl http://127.0.0.1:8000/api/exams/PROTO-20260601-123456 \
+curl http://127.0.0.1:8000/api/exams/PROTO-20260603-123456 \
   -H "X-Exam-Hash: $hash"
 ```
 
-Use the protocol plus an exam code to get only one exam result:
+Exemplo de resposta:
+
+```json
+{
+  "data": {
+    "external_service_id": 1001,
+    "protocol": "PROTO-20260603-123456",
+    "patient_name": "Jane Doe",
+    "exams": [
+      {
+        "exam_code": "TESTO",
+        "result": "Testosterona total: 560 ng/dL"
+      },
+      {
+        "exam_code": "HEMO",
+        "result": "Hemograma completo: sem alteracoes relevantes"
+      }
+    ]
+  }
+}
+```
+
+### Consultar um resultado específico
+
+```http
+GET /api/exams/{protocol}/{examCode}
+```
+
+Use esta rota quando quiser consultar apenas um exame dentro do protocolo.
+
+Exemplo:
 
 ```bash
-curl http://127.0.0.1:8000/api/exams/PROTO-20260601-123456/HEMO \
+curl http://127.0.0.1:8000/api/exams/PROTO-20260603-123456/HEMO \
   -H "X-Exam-Hash: $hash"
 ```
 
-## About Laravel
+Exemplo de resposta:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```json
+{
+  "data": {
+    "external_service_id": 1001,
+    "protocol": "PROTO-20260603-123456",
+    "patient_name": "Jane Doe",
+    "exams": [
+      {
+        "exam_code": "HEMO",
+        "result": "Hemograma completo: sem alteracoes relevantes"
+      }
+    ]
+  }
+}
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Resultados fictícios
 
-## Contributing
+Os resultados retornados pela API são fixos:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- `TESTO`: `Testosterona total: 560 ng/dL`;
+- `HEMO`: `Hemograma completo: sem alteracoes relevantes`;
+- `T4L`: `T4 livre: 1.20 ng/dL`.
 
-## Code of Conduct
+## O que será observado na avaliação
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Serão observados principalmente:
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- organização do código;
+- modelagem do fluxo de atendimento;
+- integração com API externa;
+- tratamento de falhas da API;
+- persistência correta dos protocolos e resultados;
+- clareza da interface para acompanhar o status dos exames.
