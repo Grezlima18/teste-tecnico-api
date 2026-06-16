@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'api_url' => env('EXAM_API_URL', 'http://localhost'),
     'private_key' => env('EXAM_API_PRIVATE_KEY'),
     'random_failure_percent' => (int) env('EXAM_API_RANDOM_FAILURE_PERCENT', 0),
     'fake_results' => [

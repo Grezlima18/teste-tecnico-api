@@ -5,23 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Patients extends Model
+class Exam extends Model
 {
     protected $fillable = [
         'name',
-        'sex',
-        'birth_date',
+        'code',
+        'is_external',
     ];
 
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
+            'is_external' => 'boolean',
         ];
     }
 
-    public function attendances(): HasMany
+    public function attendanceExams(): HasMany
     {
-        return $this->hasMany(Attendance::class, 'patient_id');
+        return $this->hasMany(AttendanceExam::class);
     }
 }
