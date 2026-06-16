@@ -68,14 +68,6 @@ class AttendanceController extends Controller
 
         $attendance->load(['patient', 'exams.exam']);
 
-        $internalItems = $attendance->exams->filter(
-            fn (AttendanceExam $item): bool => ! $item->exam->is_external
-        );
-
-        $internalItems->each(fn (AttendanceExam $item) => $item->update([
-            'status' => AttendanceExam::STATUS_READY,
-        ]));
-
         $externalItems = $attendance->exams->filter(
             fn (AttendanceExam $item): bool => $item->exam->is_external
         );
