@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     plugins: [
@@ -14,9 +15,13 @@ export default defineConfig({
                 }),
             ],
         }),
+        vue(),
         tailwindcss(),
     ],
     server: {
+        host: '0.0.0.0',
+        port: 5173,
+        hmr: { host: 'localhost' },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
